@@ -29,8 +29,8 @@ docker-compose --version
 
 # Step 3: Create a Docker Compose File for Nexus Repository Manager
 echo "Creating a directory for Nexus..."
-mkdir ~/nexus
-cd ~/nexus
+sudo usermod -aG docker $USER
+
 
 echo "Creating docker-compose.yml file..."
 cat <<EOF >docker-compose.yml
