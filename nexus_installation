@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Step 1: Install Docker
+echo "Updating package index..."
+sudo apt-get update
+
+echo "Installing Docker..."
+sudo apt-get install -y docker.io
+
+echo "Starting Docker and enabling it to start on boot..."
+sudo systemctl start docker
+sudo systemctl enable docker
+
+echo "Verifying Docker installation..."
+docker --version
+
+# Step 2: Install the Latest Version of Docker Compose
+echo "Getting the latest version of Docker Compose..."
+VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+
+echo "Downloading Docker Compose..."
+sudo curl -L "https://github.com/docker/compose/releases/download/$VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+echo "Applying executable permissions to the Docker Compose binary..."
+sudo chmod +x /usr/local/bin/docker-compose
+
+echo "Verifying Docker Compose installation..."
+docker-compose --version
+
+# Step 3: Create a Docker Compose File for Nexus Repository Manager
+echo "Creating a directory for Nexus..."
+mkdir ~/nexus
+cd ~/nexus
+
+echo "Creating docker-compose.yml file..."
+cat <<EOF >docker-compose.yml
+version: '3'
+
+services:
+  nexus:
+    image: sonatype/nexus3:latest
+    container_name: nexus
+    ports:
+      - "8081:8081"
+    volumes:
+      - nexus-data:/nexus-data
+
+volumes:
+  nexus-data:
+EOF
+
+# Step 4: Run Docker Compose to Set Up Nexus Repository Manager
+echo "Starting Nexus Repository Manager service using Docker Compose..."
+sudo docker-compose up -d
+
+echo "Verifying the services are running..."
+sudo docker-compose ps
+
+echo "Setup completed. Access Nexus Repository Manager at http://localhost:8081"
