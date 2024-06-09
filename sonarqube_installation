@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Step 1: Install Docker
+echo "Updating package index..."
+sudo apt-get update
+
+echo "Installing Docker..."
+sudo apt-get install -y docker.io
+
+echo "Starting Docker and enabling it to start on boot..."
+sudo systemctl start docker
+sudo systemctl enable docker
+
+echo "Verifying Docker installation..."
+docker --version
+
+# Step 2: Install the Latest Version of Docker Compose
+echo "Getting the latest version of Docker Compose..."
+VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+
+echo "Downloading Docker Compose..."
+sudo curl -L "https://github.com/docker/compose/releases/download/$VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+echo "Applying executable permissions to the Docker Compose binary..."
+sudo chmod +x /usr/local/bin/docker-compose
+
+echo "Verifying Docker Compose installation..."
+docker-compose --version
+
+# Step 3: Create a Docker Compose File for SonarQube
+echo "Creating a directory for SonarQube..."
+mkdir ~/sonarqube
+cd ~/sonarqube
+
+echo "Creating docker-compose.yml file..."
+cat <<EOF >docker-compose.yml
+version: '3'
+
+services:
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    depends_on:
+      - db
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://db:5432/sonarqube
+      - SONAR_JDBC_USERNAME=sonarqube
+      - SONAR_JDBC_PASSWORD=sonarqube
+
+  db:
+    image: postgres:latest
+    container_name: sonarqube-db
+    environment:
+      - POSTGRES_USER=sonarqube
+      - POSTGRES_PASSWORD=sonarqube
+      - POSTGRES_DB=sonarqube
+EOF
+
+# Step 4: Run Docker Compose to Set Up SonarQube
+echo "Starting SonarQube and PostgreSQL services using Docker Compose..."
+sudo docker-compose up -d
+
+echo "Verifying the services are running..."
+sudo docker-compose ps
+
+echo "Setup completed. Access SonarQube at http://localhost:9000"
