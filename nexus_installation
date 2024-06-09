@@ -56,4 +56,9 @@ sudo docker-compose up -d
 echo "Verifying the services are running..."
 sudo docker-compose ps
 
-echo "Setup completed. Access Nexus Repository Manager at http://localhost:8081"
+# Step 5: Initial Nexus Repository Manager Setup
+echo "Fetching initial admin password for Nexus Repository Manager..."
+NEXUS_PASSWORD=$(sudo docker exec nexus cat /nexus-data/admin.password)
+
+echo "Nexus Repository Manager setup completed. Access it at http://localhost:8081"
+echo "The initial admin password is: $NEXUS_PASSWORD"
